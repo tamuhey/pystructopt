@@ -33,6 +33,11 @@ def _parse(datacls: Type[T], args: List[str]) -> T:
         raise ValueError(f"Received not dataclass: {datacls}")
 
     fields = dataclasses.fields(datacls)
-    options = {v.name: FieldMeta.from_dict(v.metadata) for v in fields}
+    annots = datacls.__annotations__
+    options = {}
+    for v in fields:
+        meta = {"name": v.name, "type": annots[v.name], **v.metadata}
+        ret = dataclass_utils.into(meta, FieldMeta)
+        options[v.name] = ret
     ret = parse_args(args, options)
     return dataclass_utils.into(ret, datacls)

@@ -32,12 +32,15 @@ class FieldMeta(Generic[T]):
     short_name: Optional[str] = None
     positional: bool = True
     short: bool = False
-    long: bool = False
+    long: bool = True
     from_occurrences: bool = False
 
     @classmethod
     def from_dict(cls, meta: Mapping[str, Any]) -> "FieldMeta":
         return dataclass_utils.into(meta, cls)
+
+    def get_long_name(self) -> str:
+        return self.long_name or self.name
 
     def get_short_name(self) -> str:
         if self.short_name:
@@ -104,6 +107,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
     longopts, index2 = _get_longopt(options)
     # merge index
     index.update(index2)
+
     opts_, pos_ = getopt.getopt(args, shortopts, longopts)
 
     # convert to dict
@@ -159,7 +163,7 @@ def _get_longopt(options: Dict[str, FieldMeta]) -> Tuple[List[str], Dict[str, st
     ret = []
     for k, meta in options.items():
         if meta.long:
-            name = meta.long_name
+            name = meta.get_long_name()
             item = name
             if meta.value_required:
                 item += "="
