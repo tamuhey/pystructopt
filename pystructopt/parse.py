@@ -1,0 +1,157 @@
+from collections import defaultdict
+from dataclasses import dataclass
+import getopt
+from typing import (
+    DefaultDict,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+T = TypeVar("T", Type[str], Type[bool], Type[int], Type[List[str]])
+FieldType = Union[Type[str], Type[bool], Type[int], Type[List[str]]]
+
+
+@dataclass
+class FieldMeta(Generic[T]):
+    long_name: str
+    type: Type[T]
+    short_name: Optional[str] = None
+    positional: bool = True
+    short: bool = False
+    long: bool = False
+    from_occurrences: bool = False
+
+    def get_short_name(self) -> str:
+        return self.short_name or self.long_name[0]
+
+    def value_required(self) -> bool:
+        if not self.is_optional:
+            raise ValueError(f"Unreachable")
+
+        if self.from_occurrences:
+            return False
+        if self.type is bool:
+            return False
+        return True
+
+    @property
+    def is_optional(self) -> bool:
+        return self.short or self.long
+
+    def validate(self):
+        if not self.positional and (not self.is_optional):
+            raise ValueError("Specify either positional or optional argument")
+
+        if self.from_occurrences:
+            if self.positional:
+                raise ValueError(
+                    "Cannot use `from_occurrences` for positional argument"
+                )
+            if self.type is not int:
+                raise ValueError(
+                    "The type of a field with `from_occurrences` must be `int`"
+                )
+
+    def value_from_list(self, value: List[str]) -> T:
+        if self.type is bool:
+            if value:
+                raise ValueError(f"No field must be specified for `{self.long_name}`")
+            return True  # type: ignore https://github.com/microsoft/pyright/issues/2096
+        elif self.type is int:
+            if self.from_occurrences:
+                if any(v != "" for v in value):
+                    raise ValueError(
+                        f"Field {self.long_name} takes no value, got {value}."
+                    )
+                return len(value)
+            else:
+                return int(self._expect_one(value))
+        elif self.type is str:
+            return self._expect_one(value)
+        elif self.type is List[str]:
+            return value
+        else:
+            raise ValueError(f"Unsupported type: {self.type}")
+
+    def _expect_one(self, value: List[str]) -> str:
+        if len(value) != 1:
+            raise ValueError(
+                f"Field {self.long_name} takes exactly one value, got {value}"
+            )
+        return value[0]
+
+
+def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, FieldType]:
+    shortopts, index = _get_shortopt(options)
+    longopts, index2 = _get_longopt(options)
+    # merge index
+    index.update(index2)
+    opts_, pos_ = getopt.getopt(args, shortopts, longopts)
+
+    # convert to dict
+    opts: DefaultDict[str, List[str]] = defaultdict(list)
+    for k, v in opts_:
+        opts[k].append(v)
+    pos = _consume_pos(pos_, options)
+
+    # merge
+    for k, v in pos.items():
+        opts[k].extend(v)
+    ret = {}
+    for k, v in opts.items():
+        name = index.get(k, k)
+        ret[k] = options[name].value_from_list(v)
+    return ret
+
+
+def _consume_pos(pos: List[str], options: Dict[str, FieldMeta]) -> Dict[str, List[str]]:
+    ret = defaultdict(list)
+    last = None
+    for k, meta in options.items():
+        if not meta.positional:
+            continue
+        last = k
+        if pos:
+            ret[k].append(pos[0])
+            pos = pos[1:]
+        else:
+            break
+    if pos:
+        if not last:
+            raise ValueError(f"Unknown positional arguments: {pos}")
+        ret[last].extend(pos)
+    return ret
+
+
+def _get_shortopt(options: Dict[str, FieldMeta]) -> Tuple[str, Dict[str, str]]:
+    index = {}
+    ret = ""
+    for k, meta in options.items():
+        if meta.short:
+            name = meta.get_short_name()
+            ret += name
+            if meta.value_required:
+                ret += ":"
+            index[name] = k
+    return ret, index
+
+
+def _get_longopt(options: Dict[str, FieldMeta]) -> Tuple[List[str], Dict[str, str]]:
+    index = {}
+    ret = []
+    for k, meta in options.items():
+        if meta.long:
+            name = meta.long_name
+            item = name
+            if meta.value_required:
+                item += "="
+            ret.append(item)
+            index[name] = k
+    return ret, index
