@@ -1,12 +1,16 @@
 from collections import defaultdict
 from dataclasses import dataclass
+import dataclasses
 import getopt
 from typing import (
+    Any,
+    Mapping,
     DefaultDict,
     Dict,
     Generic,
     Iterable,
     List,
+    MappingView,
     Optional,
     Tuple,
     Type,
@@ -14,22 +18,33 @@ from typing import (
     Union,
 )
 
+import dataclass_utils
+
 T = TypeVar("T", Type[str], Type[bool], Type[int], Type[List[str]])
 FieldType = Union[Type[str], Type[bool], Type[int], Type[List[str]]]
 
 
 @dataclass
 class FieldMeta(Generic[T]):
-    long_name: str
+    name: str
     type: Type[T]
+    long_name: Optional[str] = None
     short_name: Optional[str] = None
     positional: bool = True
     short: bool = False
     long: bool = False
     from_occurrences: bool = False
 
+    @classmethod
+    def from_dict(cls, meta: Mapping[str, Any]) -> "FieldMeta":
+        return dataclass_utils.into(meta, cls)
+
     def get_short_name(self) -> str:
-        return self.short_name or self.long_name[0]
+        if self.short_name:
+            return self.short_name
+        if self.long_name:
+            return self.long_name[0]
+        return self.name[0]
 
     def value_required(self) -> bool:
         if not self.is_optional:
@@ -62,14 +77,12 @@ class FieldMeta(Generic[T]):
     def value_from_list(self, value: List[str]) -> T:
         if self.type is bool:
             if value:
-                raise ValueError(f"No field must be specified for `{self.long_name}`")
+                raise ValueError(f"No field must be specified for `{self.name}`")
             return True  # type: ignore https://github.com/microsoft/pyright/issues/2096
         elif self.type is int:
             if self.from_occurrences:
                 if any(v != "" for v in value):
-                    raise ValueError(
-                        f"Field {self.long_name} takes no value, got {value}."
-                    )
+                    raise ValueError(f"Field {self.name} takes no value, got {value}.")
                 return len(value)
             else:
                 return int(self._expect_one(value))
@@ -82,9 +95,7 @@ class FieldMeta(Generic[T]):
 
     def _expect_one(self, value: List[str]) -> str:
         if len(value) != 1:
-            raise ValueError(
-                f"Field {self.long_name} takes exactly one value, got {value}"
-            )
+            raise ValueError(f"Field {self.name} takes exactly one value, got {value}")
         return value[0]
 
 

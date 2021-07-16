@@ -1,4 +1,4 @@
-from structopt_py import parse, _parse
+from pystructopt import parse, _parse
 from dataclasses import dataclass
 import dataclasses
 from dataclass_utils import check_type
