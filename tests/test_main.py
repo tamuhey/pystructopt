@@ -12,10 +12,11 @@ class Opt0:
     c: str = "foo"
     d: bool = False
     ee: List[str] = field(metadata={"short": True}, default_factory=list)
+    ff: List[int] = field(metadata={"short": True}, default_factory=list)
 
 
 def test_parse():
     assert dataclasses.is_dataclass(Opt0)
-    args = ["--a", "100", "--b", "2", "--d", "-e", "1"]
+    args = ["--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3"]
     opt = _parse(Opt0, args)
-    assert opt == Opt0(100, "2", "foo", True)
+    assert opt == Opt0(100, "2", "foo", True, ["1"])

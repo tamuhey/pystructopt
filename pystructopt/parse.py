@@ -125,7 +125,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
     ret = {}
     for k, v in opts.items():
         name = index.get(k, k)
-        ret[k] = options[name].value_from_list(v)
+        ret[name] = options[name].value_from_list(v)
     return ret
 
 
