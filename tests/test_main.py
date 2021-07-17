@@ -1,8 +1,8 @@
 from typing import List
-from pystructopt import parse, _parse
+import sys
+from pystructopt import _parse
 from dataclasses import dataclass, field
 import dataclasses
-from dataclass_utils import check_type
 
 
 @dataclass
@@ -34,3 +34,15 @@ def test_parse():
     ]
     opt = _parse(Opt0, args)
     assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10])
+
+
+if sys.version_info >= (3, 9, 0):
+
+    @dataclass
+    class Opt1:
+        aa: list[int]
+
+    def test_parse_py39():
+        args = ["--aa", "1"]
+        opt = _parse(Opt1, args)
+        assert opt == Opt1(1)
