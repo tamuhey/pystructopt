@@ -2,6 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 import dataclasses
 import getopt
+from pystructopt.utils import is_same_type
 from typing import (
     Any,
     Mapping,
@@ -94,9 +95,9 @@ class FieldMeta(Generic[T]):
                 return int(self._expect_one(value))
         elif self.type is str:
             return self._expect_one(value)
-        elif self.type is List[str]:
+        elif is_same_type(self.type, List[str]):
             return value
-        elif self.type is List[int]:
+        elif is_same_type(self.type, List[int]):
             return [int(x) for x in value]
         else:
             raise ValueError(f"Unsupported type: {self.type}")

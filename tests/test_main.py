@@ -41,8 +41,9 @@ if sys.version_info >= (3, 9, 0):
     @dataclass
     class Opt1:
         aa: list[int]
+        bb: list[str]
 
     def test_parse_py39():
-        args = ["--aa", "1"]
+        args = ["--aa", "1", "--bb", "3", "--aa", "2"]
         opt = _parse(Opt1, args)
-        assert opt == Opt1(1)
+        assert opt == Opt1([1, 2], ["3"])
