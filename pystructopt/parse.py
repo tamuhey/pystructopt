@@ -20,8 +20,8 @@ from typing import (
 
 import dataclass_utils
 
-T = TypeVar("T", str, int, bool, List[str])
-FieldType = Union[str, int, bool, List[str]]
+T = TypeVar("T", str, int, bool, List[str], List[int])
+FieldType = Union[str, int, bool, List[str], List[int]]
 
 
 @dataclass
@@ -96,6 +96,8 @@ class FieldMeta(Generic[T]):
             return self._expect_one(value)
         elif self.type is List[str]:
             return value
+        elif self.type is List[int]:
+            return [int(x) for x in value]
         else:
             raise ValueError(f"Unsupported type: {self.type}")
 
@@ -116,16 +118,17 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
     # convert to dict
     opts: DefaultDict[str, List[str]] = defaultdict(list)
     for k, v in opts_:
-        opts[k].append(v)
+        name = index[k]
+        opts[name].append(v)
     pos = _consume_pos(pos_, options)
 
     # merge
     for k, v in pos.items():
-        opts[k].extend(v)
+        name = index[k]
+        opts[name].extend(v)
     ret = {}
     for k, v in opts.items():
-        name = index.get(k, k)
-        ret[name] = options[name].value_from_list(v)
+        ret[k] = options[k].value_from_list(v)
     return ret
 
 
