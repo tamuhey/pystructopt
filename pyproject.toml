@@ -5,7 +5,8 @@ description = ""
 authors = ["Yohei Tamura <tamuhey@gmail.com>"]
 
 [tool.poetry.dependencies]
-dataclass-utils = ">=0.7.12,<1"
+# dataclass-utils = ">=0.7.12,<1"
+dataclass_utils = { path = "../dataclass_utils", develop = true }
 python = "^3.7"
 
 [tool.poetry.dev-dependencies]

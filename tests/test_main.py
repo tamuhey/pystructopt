@@ -16,6 +16,6 @@ class Opt0:
 
 def test_parse():
     assert dataclasses.is_dataclass(Opt0)
-    args = ["--a", "100", "--b", "2", "--d", "True", "-e", "1"]
+    args = ["--a", "100", "--b", "2", "--d", "-e", "1"]
     opt = _parse(Opt0, args)
     assert opt == Opt0(100, "2", "foo", True)

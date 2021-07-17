@@ -20,8 +20,8 @@ from typing import (
 
 import dataclass_utils
 
-T = TypeVar("T", Type[str], Type[bool], Type[int], Type[List[str]])
-FieldType = Union[Type[str], Type[bool], Type[int], Type[List[str]]]
+T = TypeVar("T", str, int, bool, List[str])
+FieldType = Union[str, int, bool, List[str]]
 
 
 @dataclass
@@ -44,10 +44,11 @@ class FieldMeta(Generic[T]):
 
     def get_short_name(self) -> str:
         if self.short_name:
-            return self.short_name
+            ret = self.short_name
         if self.long_name:
-            return self.long_name[0]
-        return self.name[0]
+            ret = self.long_name[0]
+        ret = self.name[0]
+        return ret
 
     def value_required(self) -> bool:
         if not self.is_optional:
@@ -79,8 +80,10 @@ class FieldMeta(Generic[T]):
 
     def value_from_list(self, value: List[str]) -> T:
         if self.type is bool:
-            if value:
-                raise ValueError(f"No field must be specified for `{self.name}`")
+            if value != [""]:
+                raise ValueError(
+                    f"No field must be specified for `{self.name}`, got {value}"
+                )
             return True  # type: ignore https://github.com/microsoft/pyright/issues/2096
         elif self.type is int:
             if self.from_occurrences:
@@ -108,7 +111,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
     # merge index
     index.update(index2)
 
-    opts_, pos_ = getopt.getopt(args, shortopts, longopts)
+    opts_, pos_ = getopt.gnu_getopt(args, shortopts, longopts)
 
     # convert to dict
     opts: DefaultDict[str, List[str]] = defaultdict(list)
@@ -152,9 +155,9 @@ def _get_shortopt(options: Dict[str, FieldMeta]) -> Tuple[str, Dict[str, str]]:
         if meta.short:
             name = meta.get_short_name()
             ret += name
-            if meta.value_required:
+            if meta.value_required():
                 ret += ":"
-            index[name] = k
+            index["-" + name] = k
     return ret, index
 
 
@@ -165,8 +168,8 @@ def _get_longopt(options: Dict[str, FieldMeta]) -> Tuple[List[str], Dict[str, st
         if meta.long:
             name = meta.get_long_name()
             item = name
-            if meta.value_required:
+            if meta.value_required():
                 item += "="
             ret.append(item)
-            index[name] = k
+            index["--" + name] = k
     return ret, index
