@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, List, Type, TypeVar, get_args
+from typing import Any, Type, TypeVar, get_args
 from typing_extensions import TypeGuard, get_origin
 
 T = TypeVar("T")

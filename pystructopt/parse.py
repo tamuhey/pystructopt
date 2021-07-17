@@ -1,16 +1,14 @@
+import getopt
 from collections import defaultdict
 from dataclasses import dataclass
-import dataclasses
-import getopt
-from pystructopt.utils import is_same_type
 from typing import (
     Any,
-    Mapping,
     DefaultDict,
     Dict,
     Generic,
     Iterable,
     List,
+    Mapping,
     MappingView,
     Optional,
     Tuple,
@@ -20,6 +18,8 @@ from typing import (
 )
 
 import dataclass_utils
+
+from .utils import is_same_type
 
 T = TypeVar("T", str, int, bool, List[str], List[int])
 FieldType = Union[str, int, bool, List[str], List[int]]
