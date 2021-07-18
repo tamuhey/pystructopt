@@ -1,3 +1,5 @@
+from typing import List
+from pathlib import Path
 import pystructopt
 from dataclasses import dataclass, field
 
@@ -11,6 +13,9 @@ class Opts:
 
     # -vvv -> 3
     verbose: int = field(metadata={"short": True, "from_occurrences": True})
+
+    # multiple value
+    paths: List[Path] = field(metadata={"short": True})
 
 
 opts = pystructopt.parse(Opts)
