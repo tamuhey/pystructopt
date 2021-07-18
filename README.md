@@ -27,8 +27,8 @@ class Opts:
     bar: str = "bar"
 
 
-opts = pystructopt.parse(Opts)
-print(opts)
+opts: Opts = pystructopt.parse(Opts)
+print(opts.verbose)
 ```
 
 ## Installation
