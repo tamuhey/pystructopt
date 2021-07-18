@@ -14,10 +14,12 @@ from typing import (
 )
 
 import dataclass_utils
+import logging
 
 from .utils import is_same_type
 
 FieldType = Union[str, int, bool, List[str], List[int]]
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,7 +38,8 @@ class FieldMeta:
         return dataclass_utils.into(meta, cls)
 
     def get_long_name(self) -> str:
-        return self.long_name or self.name
+        ret = self.long_name or self.name
+        return ret.replace("_", "-")
 
     def get_short_name(self) -> str:
         if self.short_name:
@@ -109,6 +112,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
     longopts, index2 = _get_longopt(options)
     # merge index
     index.update(index2)
+    logger.info(f"index: {index}")
 
     opts_, pos_ = getopt.gnu_getopt(args, shortopts, longopts)
 
@@ -118,19 +122,20 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
         name = index[k]
         opts[name].append(v)
     pos = _consume_pos(pos_, options)
+    logger.info(f"opts: {opts}")
+    logger.info(f"pos: {pos}")
 
     # merge
     for k, v in pos.items():
-        name = index[k]
-        opts[name].extend(v)
-    ret = {}
+        opts[k].extend(v)
+    ret: Dict[str, FieldType] = {}
     for k, v in opts.items():
         ret[k] = options[k].value_from_list(v)
     return ret
 
 
 def _consume_pos(pos: List[str], options: Dict[str, FieldMeta]) -> Dict[str, List[str]]:
-    ret = defaultdict(list)
+    ret: DefaultDict[str, List[str]] = defaultdict(list)
     last = None
     for k, meta in options.items():
         if not meta.positional:
@@ -149,7 +154,8 @@ def _consume_pos(pos: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Lis
 
 
 def _get_shortopt(options: Dict[str, FieldMeta]) -> Tuple[str, Dict[str, str]]:
-    index = {}
+    """Index contains `shortopt: original name`"""
+    index: Dict[str, str] = {}
     ret = ""
     for k, meta in options.items():
         if meta.short:
@@ -162,8 +168,8 @@ def _get_shortopt(options: Dict[str, FieldMeta]) -> Tuple[str, Dict[str, str]]:
 
 
 def _get_longopt(options: Dict[str, FieldMeta]) -> Tuple[List[str], Dict[str, str]]:
-    index = {}
-    ret = []
+    index: Dict[str, str] = {}
+    ret: List[str] = []
     for k, meta in options.items():
         if meta.long:
             name = meta.get_long_name()

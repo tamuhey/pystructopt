@@ -25,23 +25,17 @@ def test_parse0():
     assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10], 1)
 
 
-#  @dataclass
-#  class Opt1:
-#      a: int
-#      b: str
-#      c: str = "foo"
-#      d: bool = False
-#      ee: List[str] = field(metadata={"short": True}, default_factory=list)
-#      ff: List[int] = field(metadata={"short": True}, default_factory=list)
-#
-#
-#  def test_parse1():
-#      assert dataclasses.is_dataclass(Opt0)
-#      # fmt: off
-#      args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", ]
-#      # fmt: on
-#      opt = _parse(Opt0, args)
-#      assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10])
+@dataclass
+class Opt1:
+    a: int
+
+
+def test_parse1():
+    # fmt: off
+    args = ["1"]
+    # fmt: on
+    opt = _parse(Opt1, args)
+    assert opt == Opt1(1)
 
 
 if sys.version_info >= (3, 9, 0):
