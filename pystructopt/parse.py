@@ -112,11 +112,11 @@ class FieldMeta:
 
 
 def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]:
-    for k, v in options.items():
+    for name, fieldmeta in options.items():
         try:
-            v.validate()
+            fieldmeta.validate()
         except ValueError as e:
-            raise ValueError(f"Error in `{k}`.") from e
+            raise ValueError(f"Error in `{name}`.") from e
     logger.info(f"options: {options}")
     shortopts, index = _get_shortopt(options)
     longopts, index2 = _get_longopt(options)
