@@ -17,7 +17,7 @@ class Opts:
         metadata={"short": True, "from_occurrences": True, "positional": False}
     )
 
-    # multiple value
+    # multiple values
     paths: List[Path] = field(metadata={"short": True})
 
     # customize option name
