@@ -98,6 +98,8 @@ class FieldMeta:
             types = get_args(self.type)
             if len(types) == 1:
                 ty = types[0]
+            elif len(types) >= 2:
+                raise ValueError(f"Unreachable: {self.type}")
             else:
                 ty = Any
             for v in value:

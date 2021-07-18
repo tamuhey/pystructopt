@@ -30,14 +30,15 @@ class Opt1:
     a: int
     b: Literal[1, 2]
     c: Union[Literal[1, 2], Literal[3]]
+    dd: List[Literal[1, 2, "a"]]
 
 
 def test_parse1():
     # fmt: off
-    args = ["1", "2"]
+    args = ["1", "2", "3", "--dd", "1", "--dd","2", "--dd", "a"]
     # fmt: on
     opt = _parse(Opt1, args)
-    assert opt == Opt1(1, 2, 3)
+    assert opt == Opt1(1, 2, 3, [1, 2, "a"])
 
 
 if sys.version_info >= (3, 9, 0):
