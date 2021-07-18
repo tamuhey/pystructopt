@@ -29,8 +29,6 @@ def _get_options(datacls: Type[Any]) -> Dict[str, FieldMeta]:
     fields = dataclasses.fields(datacls)
     annots = datacls.__annotations__
     options: Dict[str, FieldMeta] = {}
-    print(fields)
-    print(annots)
     for v in fields:
         meta = {"name": v.name, "type": annots[v.name], **v.metadata}
         ret = dataclass_utils.into(meta, FieldMeta)

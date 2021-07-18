@@ -16,6 +16,6 @@ test_all:
 run_example:
 	ls examples/*py | xargs poetry run python
 
-publish: lint test_all
+publish: test_all lint
 	git diff --exit-code # check working directory is clean
 	poetry publish --build
