@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal, Union
 import sys
 from pystructopt import _parse
 from dataclasses import dataclass, field
@@ -28,14 +28,16 @@ def test_parse0():
 @dataclass
 class Opt1:
     a: int
+    b: Literal[1, 2]
+    c: Union[Literal[1, 2], Literal[3]]
 
 
 def test_parse1():
     # fmt: off
-    args = ["1"]
+    args = ["1", "2"]
     # fmt: on
     opt = _parse(Opt1, args)
-    assert opt == Opt1(1)
+    assert opt == Opt1(1, 2, 3)
 
 
 if sys.version_info >= (3, 9, 0):

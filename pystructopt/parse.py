@@ -10,7 +10,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    Union,
 )
 
 import dataclass_utils
@@ -18,14 +17,13 @@ import logging
 
 from .utils import is_same_type
 
-FieldType = Union[str, int, bool, List[str], List[int]]
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class FieldMeta:
     name: str
-    type: Type[FieldType]
+    type: Type[Any]
     long_name: Optional[str] = None
     short_name: Optional[str] = None
     positional: bool = True
@@ -77,7 +75,7 @@ class FieldMeta:
                     "The type of a field with `from_occurrences` must be `int`"
                 )
 
-    def value_from_list(self, value: List[str]) -> FieldType:
+    def value_from_list(self, value: List[str]) -> Any:
         if self.type is bool:
             if value != [""]:
                 raise ValueError(
@@ -93,7 +91,6 @@ class FieldMeta:
                 return int(self._expect_one(value))
         elif self.type is str:
             return self._expect_one(value)
-
         elif is_same_type(self.type, List[str]):
             return value
         elif is_same_type(self.type, List[int]):
@@ -107,7 +104,7 @@ class FieldMeta:
         return value[0]
 
 
-def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, FieldType]:
+def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]:
     shortopts, index = _get_shortopt(options)
     longopts, index2 = _get_longopt(options)
     # merge index
@@ -128,7 +125,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Fiel
     # merge
     for k, v in pos.items():
         opts[k].extend(v)
-    ret: Dict[str, FieldType] = {}
+    ret: Dict[str, Any] = {}
     for k, v in opts.items():
         ret[k] = options[k].value_from_list(v)
     return ret
