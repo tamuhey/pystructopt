@@ -1,8 +1,11 @@
-from typing import List, Literal, Union
-import sys
-from pystructopt import _parse
-from dataclasses import dataclass, field
 import dataclasses
+import sys
+from dataclasses import dataclass, field
+from typing import List, Union
+
+from typing_extensions import Literal
+
+from pystructopt import _parse, _get_options
 
 
 @dataclass
@@ -35,7 +38,7 @@ class Opt1:
 
 def test_parse1():
     # fmt: off
-    args = ["1", "2", "3", "--dd", "1", "--dd","2", "--dd", "a"]
+    args = ["1", "2", "3", "--dd", "1", "--dd", "2", "--dd", "a"]
     # fmt: on
     opt = _parse(Opt1, args)
     assert opt == Opt1(1, 2, 3, [1, 2, "a"])
@@ -44,11 +47,11 @@ def test_parse1():
 if sys.version_info >= (3, 9, 0):
 
     @dataclass
-    class Opt1:
+    class Opt100:
         aa: list[int]
         bb: list[str]
 
     def test_parse_py39():
         args = ["--aa", "1", "--bb", "3", "--aa", "2"]
-        opt = _parse(Opt1, args)
-        assert opt == Opt1([1, 2], ["3"])
+        opt = _parse(Opt100, args)
+        assert opt == Opt100([1, 2], ["3"])

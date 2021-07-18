@@ -1,20 +1,7 @@
-import sys
-from typing import List, Literal, Union
-from pystructopt.utils import from_str, is_same_type
+from typing import Type, Union, Any
+from typing_extensions import Literal
+from pystructopt.utils import from_str
 import pytest
-
-
-@pytest.mark.parametrize(
-    "a,b,expected",
-    [
-        (List[int], list, True),
-        (set, list, False),
-        (int, str, False),
-        (List[str], List[int], False),
-    ],
-)
-def test_is_same_class(a, b, expected):
-    assert is_same_type(a, b) == expected
 
 
 @pytest.mark.parametrize(
@@ -31,20 +18,5 @@ def test_is_same_class(a, b, expected):
         (Union[Literal[3], Literal["1", 2]], "2", 2),
     ],
 )
-def test_from_str(kls, value, expected):
+def test_from_str(kls: Type[Any], value: Any, expected: Any):
     assert from_str(kls, value) == expected
-
-
-if sys.version_info >= (3, 9, 0):
-
-    @pytest.mark.parametrize(
-        "a,b,expected",
-        [
-            (List[int], list[int], True),
-            (List, list, True),
-            (List, list[int], True),
-            (set, list[int], False),
-        ],
-    )
-    def test_is_same_class39(a, b, expected):
-        assert is_same_type(a, b) == expected

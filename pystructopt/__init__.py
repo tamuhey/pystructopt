@@ -1,21 +1,14 @@
 import dataclasses
-from dataclasses import dataclass
 import inspect
 from pystructopt.parse import FieldMeta, parse_args
 from typing import (
     Any,
     Dict,
-    Iterator,
     List,
-    Mapping,
-    Optional,
-    Sequence,
     Type,
     TypeVar,
-    Union,
 )
 import dataclass_utils
-import argparse
 import sys
 
 
@@ -32,12 +25,19 @@ def _parse(datacls: Type[T], args: List[str]) -> T:
     if not dataclasses.is_dataclass(datacls):
         raise ValueError(f"Received not dataclass: {datacls}")
 
+    options = _get_options(datacls)
+    ret = parse_args(args, options)
+    return dataclass_utils.into(ret, datacls)
+
+
+def _get_options(datacls: Type[Any]) -> Dict[str, FieldMeta]:
     fields = dataclasses.fields(datacls)
     annots = datacls.__annotations__
-    options = {}
+    options: Dict[str, FieldMeta] = {}
+    print(fields)
+    print(annots)
     for v in fields:
         meta = {"name": v.name, "type": annots[v.name], **v.metadata}
         ret = dataclass_utils.into(meta, FieldMeta)
         options[v.name] = ret
-    ret = parse_args(args, options)
-    return dataclass_utils.into(ret, datacls)
+    return options

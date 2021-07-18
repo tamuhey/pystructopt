@@ -10,14 +10,13 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    get_args,
-    get_origin,
 )
+from typing_extensions import get_args, get_origin
 
 import dataclass_utils
 import logging
 
-from .utils import from_str, is_same_type
+from .utils import from_str
 
 logger = logging.getLogger(__name__)
 
@@ -122,12 +121,15 @@ class FieldMeta:
 
 
 def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]:
+    logger.info(f"options: {options}")
     shortopts, index = _get_shortopt(options)
     longopts, index2 = _get_longopt(options)
     # merge index
     index.update(index2)
     logger.info(f"index: {index}")
 
+    logger.info(f"short: {shortopts}")
+    logger.info(f"long : {longopts}")
     opts_, pos_ = getopt.gnu_getopt(args, shortopts, longopts)
 
     # convert to dict
