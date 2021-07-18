@@ -54,13 +54,13 @@ class FieldMeta:
         return self.short or self.long
 
     def validate(self):
-        if not self.positional and (not self.is_optional):
+        if not (self.positional ^ self.is_optional):
             raise ValueError("Specify either positional or optional argument")
 
         if self.from_occurrences:
             if self.positional:
                 raise ValueError(
-                    "Cannot use `from_occurrences` for positional argument"
+                    "Cannot use `from_occurrences` with positional argument"
                 )
             if self.type is not int:
                 raise ValueError(

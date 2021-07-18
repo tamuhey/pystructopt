@@ -17,15 +17,16 @@ class Opt0:
     ee: List[str] = field(metadata={"short": True}, default_factory=list)
     ff: List[int] = field(metadata={"short": True}, default_factory=list)
     g_g: int = 0
+    verbose: int = field(default=0, metadata={"from_occurrences": True, "short": True})
 
 
 def test_parse0():
     assert dataclasses.is_dataclass(Opt0)
     # fmt: off
-    args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1"]
+    args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1", "-vv"]
     # fmt: on
     opt = _parse(Opt0, args)
-    assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10], 1)
+    assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10], 1, verbose=2)
 
 
 @dataclass
