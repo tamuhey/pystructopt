@@ -74,7 +74,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "dataclass-utils"
-version = "0.7.14"
+version = "0.7.17"
 description = ""
 category = "main"
 optional = false
@@ -284,8 +284,8 @@ colorama = [
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
 dataclass-utils = [
-    {file = "dataclass_utils-0.7.14-py3-none-any.whl", hash = "sha256:6b2e8272037747c542cc76b09b2ab71356bdce919a5e85b87f9eb6beaee71943"},
-    {file = "dataclass_utils-0.7.14.tar.gz", hash = "sha256:788f63a2efc70122cab01131f3e1e4b8e5c772645031cdf6bee42432158e885c"},
+    {file = "dataclass_utils-0.7.17-py3-none-any.whl", hash = "sha256:f78bb4140d54cde0a9fa47b1003bf7e31ef88db4eee168f5f6cf70fdde8efd4c"},
+    {file = "dataclass_utils-0.7.17.tar.gz", hash = "sha256:89f740927ab200c371c07d7f958c815739d00ca9c8fa5f4417637d7ac8394290"},
 ]
 importlib-metadata = [
     {file = "importlib_metadata-4.6.1-py3-none-any.whl", hash = "sha256:9f55f560e116f8643ecf2922d9cd3e1c7e8d52e683178fecd9d08f6aa357e11e"},
