@@ -4,9 +4,14 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pystructopt"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = [ "Yohei Tamura <tamuhey@gmail.com>",]
+
+[tool.versionup]
+tag = true
+commit = true
+files = [ "pystructopt/VERSION.py",]
 
 [tool.poetry.dependencies]
 dataclass-utils = ">=0.7.14,<1"
@@ -21,8 +26,3 @@ black = "^21.6b0"
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
-
-[tool.versionup]
-tag = true
-commit = true
-files = [ "pystructopt/VERSION.py",]
