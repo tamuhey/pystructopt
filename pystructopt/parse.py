@@ -5,15 +5,11 @@ from typing import (
     Any,
     DefaultDict,
     Dict,
-    Generic,
-    Iterable,
     List,
     Mapping,
-    MappingView,
     Optional,
     Tuple,
     Type,
-    TypeVar,
     Union,
 )
 
@@ -21,14 +17,13 @@ import dataclass_utils
 
 from .utils import is_same_type
 
-T = TypeVar("T", str, int, bool, List[str], List[int])
 FieldType = Union[str, int, bool, List[str], List[int]]
 
 
 @dataclass
-class FieldMeta(Generic[T]):
+class FieldMeta:
     name: str
-    type: Type[T]
+    type: Type[FieldType]
     long_name: Optional[str] = None
     short_name: Optional[str] = None
     positional: bool = True
@@ -79,22 +74,23 @@ class FieldMeta(Generic[T]):
                     "The type of a field with `from_occurrences` must be `int`"
                 )
 
-    def value_from_list(self, value: List[str]) -> T:
+    def value_from_list(self, value: List[str]) -> FieldType:
         if self.type is bool:
             if value != [""]:
                 raise ValueError(
                     f"No field must be specified for `{self.name}`, got {value}"
                 )
-            return True  # type: ignore https://github.com/microsoft/pyright/issues/2096
+            return True
         elif self.type is int:
             if self.from_occurrences:
                 if any(v != "" for v in value):
                     raise ValueError(f"Field {self.name} takes no value, got {value}.")
-                return len(value)
+                return len(value)  # type: ignore
             else:
                 return int(self._expect_one(value))
         elif self.type is str:
             return self._expect_one(value)
+
         elif is_same_type(self.type, List[str]):
             return value
         elif is_same_type(self.type, List[int]):
