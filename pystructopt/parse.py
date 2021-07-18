@@ -18,7 +18,7 @@ class FieldMeta:
     type: Type[Any]
     long_name: Optional[str] = None
     short_name: Optional[str] = None
-    positional: bool = True
+    positional: bool = False
     short: bool = False
     long: bool = True
     from_occurrences: bool = False
@@ -40,7 +40,7 @@ class FieldMeta:
         return ret
 
     def value_required(self) -> bool:
-        if not self.is_optional:
+        if not self.optional:
             raise ValueError(f"Unreachable")
 
         if self.from_occurrences:
@@ -50,11 +50,11 @@ class FieldMeta:
         return True
 
     @property
-    def is_optional(self) -> bool:
+    def optional(self) -> bool:
         return self.short or self.long
 
     def validate(self):
-        if not (self.positional ^ self.is_optional):
+        if not (self.positional or self.optional):
             raise ValueError("Specify either positional or optional argument")
 
         if self.from_occurrences:
@@ -112,6 +112,11 @@ class FieldMeta:
 
 
 def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]:
+    for k, v in options.items():
+        try:
+            v.validate()
+        except ValueError as e:
+            raise ValueError(f"Error in `{k}`.") from e
     logger.info(f"options: {options}")
     shortopts, index = _get_shortopt(options)
     longopts, index2 = _get_longopt(options)

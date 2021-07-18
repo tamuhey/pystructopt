@@ -31,6 +31,6 @@ def _get_options(datacls: Type[Any]) -> Dict[str, FieldMeta]:
     options: Dict[str, FieldMeta] = {}
     for v in fields:
         meta = {"name": v.name, "type": annots[v.name], **v.metadata}
-        ret = dataclass_utils.into(meta, FieldMeta)
+        ret = FieldMeta.from_dict(meta)
         options[v.name] = ret
     return options

@@ -10,14 +10,17 @@ from pystructopt import _parse, _get_options
 
 @dataclass
 class Opt0:
-    a: int
-    b: str
-    c: str = "foo"
+    a: int = field(metadata={"positional": True})
+    b: str = field(metadata={"positional": True})
+    c: str = field(default="foo", metadata={"positional": True})
     d: bool = False
     ee: List[str] = field(metadata={"short": True}, default_factory=list)
     ff: List[int] = field(metadata={"short": True}, default_factory=list)
     g_g: int = 0
-    verbose: int = field(default=0, metadata={"from_occurrences": True, "short": True})
+    verbose: int = field(
+        default=0,
+        metadata={"from_occurrences": True, "short": True},
+    )
 
 
 def test_parse0():
@@ -29,12 +32,17 @@ def test_parse0():
     assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10], 1, verbose=2)
 
 
+def test_get_options():
+    fields = _get_options(Opt0)
+    assert fields["a"].positional
+
+
 @dataclass
 class Opt1:
-    a: int
-    b: Literal[1, 2]
-    c: Union[Literal[1, 2], Literal[3]]
-    dd: List[Literal[1, 2, "a"]]
+    a: int = field(metadata={"positional": True})
+    b: Literal[1, 2] = field(metadata={"positional": True})
+    c: Union[Literal[1, 2], Literal[3]] = field(metadata={"positional": True})
+    dd: List[Literal[1, 2, "a"]] = field(metadata={"positional": True})
 
 
 def test_parse1():
