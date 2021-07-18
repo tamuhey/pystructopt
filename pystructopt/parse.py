@@ -67,7 +67,7 @@ class FieldMeta:
                     "The type of a field with `from_occurrences` must be `int`"
                 )
 
-    def value_from_list(self, value: List[str]) -> Any:
+    def value_from_strs(self, value: List[str]) -> Any:
         if self.type is bool:
             if value != [""]:
                 raise ValueError(
@@ -137,7 +137,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]
         opts[k].extend(v2)
     ret: Dict[str, Any] = {}
     for k, v3 in opts.items():
-        ret[k] = options[k].value_from_list(v3)
+        ret[k] = options[k].value_from_strs(v3)
     return ret
 
 

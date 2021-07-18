@@ -1,3 +1,4 @@
+import inspect
 from typing import Optional, Type, TypeVar, Union, cast
 
 from typing_extensions import Literal, get_args, get_origin
@@ -8,7 +9,7 @@ T = TypeVar("T")
 def from_str(kls: Type[T], value: str) -> Optional[T]:
     if kls is str:
         return cast(T, value)
-    if kls is bool or kls is int:
+    if inspect.isclass(kls):
         try:
             return kls(value)  # type: ignore
         except ValueError:
