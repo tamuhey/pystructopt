@@ -1,16 +1,13 @@
 import dataclasses
 import inspect
-from pystructopt.parse import FieldMeta, parse_args
-from typing import (
-    Any,
-    Dict,
-    List,
-    Type,
-    TypeVar,
-)
-import dataclass_utils
 import sys
+from typing import Any, Dict, List, Type, TypeVar
 
+import dataclass_utils
+
+from pystructopt.parse import FieldMeta, parse_args
+
+from .VERSION import __version__
 
 T = TypeVar("T")
 
