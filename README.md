@@ -28,7 +28,7 @@ class Opts:
 
 
 opts: Opts = pystructopt.parse(Opts)
-print(opts.verbose)
+assert isinstance(opts.verbose, int)
 ```
 
 ## Installation
