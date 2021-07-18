@@ -1,20 +1,11 @@
 import getopt
+import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import (
-    Any,
-    DefaultDict,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Type,
-)
-from typing_extensions import get_args, get_origin
+from typing import Any, DefaultDict, Dict, List, Mapping, Optional, Tuple, Type
 
-import dataclass_utils
-import logging
+import dataclass_utils  # type: ignore
+from typing_extensions import get_args, get_origin
 
 from .utils import from_str
 
@@ -142,11 +133,11 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]
     logger.info(f"pos: {pos}")
 
     # merge
-    for k, v in pos.items():
-        opts[k].extend(v)
+    for k, v2 in pos.items():
+        opts[k].extend(v2)
     ret: Dict[str, Any] = {}
-    for k, v in opts.items():
-        ret[k] = options[k].value_from_list(v)
+    for k, v3 in opts.items():
+        ret[k] = options[k].value_from_list(v3)
     return ret
 
 

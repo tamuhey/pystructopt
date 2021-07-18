@@ -3,11 +3,9 @@ import inspect
 import sys
 from typing import Any, Dict, List, Type, TypeVar
 
-import dataclass_utils
+import dataclass_utils  # type: ignore
 
 from pystructopt.parse import FieldMeta, parse_args
-
-from .VERSION import __version__
 
 T = TypeVar("T")
 

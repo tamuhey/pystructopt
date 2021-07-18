@@ -10,7 +10,7 @@ def from_str(kls: Type[T], value: str) -> Optional[T]:
         return cast(T, value)
     if kls is bool or kls is int:
         try:
-            return kls(value)
+            return kls(value)  # type: ignore
         except ValueError:
             return None
 
@@ -19,6 +19,7 @@ def from_str(kls: Type[T], value: str) -> Optional[T]:
         return _from_str_lit(kls, value)
     if origin is Union:
         return _from_str_union(kls, value)
+    return None
 
 
 def _from_str_union(kls: Type[T], value: str) -> Optional[T]:
@@ -26,6 +27,7 @@ def _from_str_union(kls: Type[T], value: str) -> Optional[T]:
         ret = from_str(arg, value)
         if ret is not None:
             return ret
+    return None
 
 
 def _from_str_lit(kls: Type[T], value: str) -> Optional[T]:
@@ -34,3 +36,4 @@ def _from_str_lit(kls: Type[T], value: str) -> Optional[T]:
         ret = from_str(ty, value)
         if ret == arg:
             return ret
+    return None
