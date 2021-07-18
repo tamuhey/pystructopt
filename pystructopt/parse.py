@@ -10,12 +10,14 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    get_args,
+    get_origin,
 )
 
 import dataclass_utils
 import logging
 
-from .utils import is_same_type
+from .utils import from_str, is_same_type
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +93,25 @@ class FieldMeta:
                 return int(self._expect_one(value))
         elif self.type is str:
             return self._expect_one(value)
-        elif is_same_type(self.type, List[str]):
-            return value
-        elif is_same_type(self.type, List[int]):
-            return [int(x) for x in value]
+        elif get_origin(self.type) is list:
+            rets: List[Any] = []
+            types = get_args(self.type)
+            if len(types) == 1:
+                ty = types[0]
+            else:
+                ty = Any
+            for v in value:
+                w = from_str(ty, v)
+                if w is None:
+                    raise ValueError(f"Error in converting `{v}` to {self.type}")
+                rets.append(w)
+            return rets
         else:
-            raise ValueError(f"Unsupported type: {self.type}")
+            v = self._expect_one(value)
+            ret = from_str(self.type, v)
+            if ret is None:
+                raise ValueError(f"Error in converting `{v}` to {self.type}")
+            return ret
 
     def _expect_one(self, value: List[str]) -> str:
         if len(value) != 1:
