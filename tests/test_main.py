@@ -21,15 +21,18 @@ class Opt0:
         default=0,
         metadata={"from_occurrences": True, "short": True},
     )
+    verylonglongname: int = field(default=0, metadata={"long": "alternative"})
 
 
 def test_parse0():
     assert dataclasses.is_dataclass(Opt0)
     # fmt: off
-    args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1", "-vv"]
+    args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1", "-vv", "--alternative", "10"]
     # fmt: on
     opt = _parse(Opt0, args)
-    assert opt == Opt0(100, "2", "foo", True, ["1", "3"], [1, 10], 1, verbose=2)
+    assert opt == Opt0(
+        100, "2", "foo", True, ["1", "3"], [1, 10], 1, verbose=2, verylonglongname=10
+    )
 
 
 def test_get_options():

@@ -2,7 +2,7 @@ import getopt
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, List, Mapping, Optional, Tuple, Type
+from typing import Any, DefaultDict, Dict, List, Mapping, Tuple, Type, Union
 
 import dataclass_utils  # type: ignore
 from typing_extensions import get_args, get_origin
@@ -16,27 +16,29 @@ logger = logging.getLogger(__name__)
 class FieldMeta:
     name: str
     type: Type[Any]
-    long_name: Optional[str] = None
-    short_name: Optional[str] = None
+    long: Union[bool, str] = True
+    short: Union[bool, str] = False
     positional: bool = False
-    short: bool = False
-    long: bool = True
     from_occurrences: bool = False
 
     @classmethod
     def from_dict(cls, meta: Mapping[str, Any]) -> "FieldMeta":
         return dataclass_utils.into(meta, cls)
 
-    def get_long_name(self) -> str:
-        ret = self.long_name or self.name
+    @property
+    def long_name(self) -> str:
+        if isinstance(self.long, str):
+            ret = self.long
+        else:
+            ret = self.name
         return ret.replace("_", "-")
 
-    def get_short_name(self) -> str:
-        if self.short_name:
-            ret = self.short_name
-        if self.long_name:
+    @property
+    def short_name(self) -> str:
+        if isinstance(self.short, str):
+            ret = self.short
+        else:
             ret = self.long_name[0]
-        ret = self.name[0]
         return ret
 
     def value_required(self) -> bool:
@@ -51,7 +53,7 @@ class FieldMeta:
 
     @property
     def optional(self) -> bool:
-        return self.short or self.long
+        return bool(self.short or self.long)
 
     def validate(self):
         if not (self.positional or self.optional):
@@ -171,7 +173,7 @@ def _get_shortopt(options: Dict[str, FieldMeta]) -> Tuple[str, Dict[str, str]]:
     ret = ""
     for k, meta in options.items():
         if meta.short:
-            name = meta.get_short_name()
+            name = meta.short_name
             ret += name
             if meta.value_required():
                 ret += ":"
@@ -184,7 +186,7 @@ def _get_longopt(options: Dict[str, FieldMeta]) -> Tuple[List[str], Dict[str, st
     ret: List[str] = []
     for k, meta in options.items():
         if meta.long:
-            name = meta.get_long_name()
+            name = meta.long_name
             item = name
             if meta.value_required():
                 item += "="
