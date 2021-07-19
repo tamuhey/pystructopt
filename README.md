@@ -1,6 +1,12 @@
 # Command line argument parser with dataclass
 
 ```python
+from typing import List
+from pathlib import Path
+import pystructopt
+from dataclasses import dataclass, field
+
+
 @dataclass
 class Opts:
     # basic optional argument
@@ -17,7 +23,7 @@ class Opts:
         metadata={"short": True, "from_occurrences": True, "positional": False}
     )
 
-    # multiple values
+    # multiple value
     paths: List[Path] = field(metadata={"short": True})
 
     # customize option name
@@ -27,8 +33,9 @@ class Opts:
     bar: str = "bar"
 
 
-opts: Opts = pystructopt.parse(Opts)
-assert isinstance(opts.verbose, int)
+opts = pystructopt.parse(Opts)
+print(opts)
+
 ```
 
 ## Installation
