@@ -1,5 +1,5 @@
 import pytest
-from pystructopt import FieldMeta
+from pystructopt._parse import FieldMeta
 
 
 def test_fieldmeta():

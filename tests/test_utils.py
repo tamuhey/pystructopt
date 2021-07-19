@@ -1,7 +1,7 @@
 from typing import Type, Union, Any
 from pathlib import Path
 from typing_extensions import Literal
-from pystructopt.utils import ParseError, from_str
+from pystructopt._utils import ParseError, from_str
 import pytest
 
 

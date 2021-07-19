@@ -5,7 +5,7 @@ from typing import List, Union
 
 from typing_extensions import Literal
 
-from pystructopt import _parse, _get_options
+from pystructopt import _parse, get_options
 
 
 @dataclass
@@ -36,8 +36,10 @@ def test_parse0():
 
 
 def test_get_options():
-    fields = _get_options(Opt0)
-    assert fields["a"].positional
+    fields = get_options(Opt0)
+    meta = fields[0]
+    assert meta.positional
+    assert meta.name == "a"
 
 
 @dataclass

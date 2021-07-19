@@ -2,12 +2,12 @@ import getopt
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, List, Mapping, Tuple, Type, Union
+from typing import Any, DefaultDict, Dict, List, Mapping, Set, Tuple, Type, Union
 
 import dataclass_utils  # type: ignore
 from typing_extensions import get_args, get_origin
 
-from .utils import from_str
+from ._utils import from_str
 
 logger = logging.getLogger(__name__)
 
@@ -56,18 +56,18 @@ class FieldMeta:
         return bool(self.short or self.long)
 
     def validate(self):
+        err = None
         if not (self.positional or self.optional):
-            raise ValueError("Specify either positional or optional argument")
+            err = "Specify either positional or optional argument"
 
         if self.from_occurrences:
             if self.positional:
-                raise ValueError(
-                    "Cannot use `from_occurrences` with positional argument"
-                )
+                err = "Cannot use `from_occurrences` with positional argument"
+
             if self.type is not int:
-                raise ValueError(
-                    "The type of a field with `from_occurrences` must be `int`"
-                )
+                err = "The type of a field with `from_occurrences` must be `int`"
+        if err:
+            raise ValueError(f"Error in {self.name}: {err}")
 
     def value_from_strs(self, value: List[str]) -> Any:
         if self.type is bool:
@@ -113,12 +113,8 @@ class FieldMeta:
         return value[0]
 
 
-def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]:
-    for name, fieldmeta in options.items():
-        try:
-            fieldmeta.validate()
-        except ValueError as e:
-            raise ValueError(f"Error in `{name}`.") from e
+def parse_args(args: List[str], options: List[FieldMeta]) -> Dict[str, Any]:
+    _validate_options(options)
     logger.info(f"options: {options}")
     shortopts, index = _get_shortopt(options)
     longopts, index2 = _get_longopt(options)
@@ -135,7 +131,7 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]
     for k, v in opts_:
         name = index[k]
         opts[name].append(v)
-    pos = _consume_pos(pos_, options)
+    pos = _consume_pos_args(pos_, options)
     logger.info(f"opts: {opts}")
     logger.info(f"pos: {pos}")
 
@@ -143,20 +139,39 @@ def parse_args(args: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Any]
     for k, v2 in pos.items():
         opts[k].extend(v2)
     ret: Dict[str, Any] = {}
+
+    # convert to value
+    tmp = {meta.name: meta for meta in options}
     for k, v3 in opts.items():
-        ret[k] = options[k].value_from_strs(v3)
+        ret[k] = tmp[k].value_from_strs(v3)
     return ret
 
 
-def _consume_pos(pos: List[str], options: Dict[str, FieldMeta]) -> Dict[str, List[str]]:
+def _validate_options(options: List[FieldMeta]):
+    shorts: Set[str] = set()
+    longs: Set[str] = set()
+    for opt in options:
+        opt.validate()
+        for flag, name, seen in [
+            (opt.short, opt.short_name, shorts),
+            (opt.long, opt.long_name, longs),
+        ]:
+            if not flag:
+                continue
+            if name in seen:
+                raise ValueError(f"Duplicated option: {name}")
+            seen.add(name)
+
+
+def _consume_pos_args(pos: List[str], options: List[FieldMeta]) -> Dict[str, List[str]]:
     ret: DefaultDict[str, List[str]] = defaultdict(list)
     last = None
-    for k, meta in options.items():
+    for meta in options:
         if not meta.positional:
             continue
-        last = k
+        last = meta.name
         if pos:
-            ret[k].append(pos[0])
+            ret[meta.name].append(pos[0])
             pos = pos[1:]
         else:
             break
@@ -167,29 +182,29 @@ def _consume_pos(pos: List[str], options: Dict[str, FieldMeta]) -> Dict[str, Lis
     return ret
 
 
-def _get_shortopt(options: Dict[str, FieldMeta]) -> Tuple[str, Dict[str, str]]:
-    """Index contains `shortopt: original name`"""
+def _get_shortopt(options: List[FieldMeta]) -> Tuple[str, Dict[str, str]]:
+    """Returns (opt, index). Index contains `shortopt: original name`"""
     index: Dict[str, str] = {}
     ret = ""
-    for k, meta in options.items():
+    for meta in options:
         if meta.short:
             name = meta.short_name
             ret += name
             if meta.value_required():
                 ret += ":"
-            index["-" + name] = k
+            index["-" + name] = meta.name
     return ret, index
 
 
-def _get_longopt(options: Dict[str, FieldMeta]) -> Tuple[List[str], Dict[str, str]]:
+def _get_longopt(options: List[FieldMeta]) -> Tuple[List[str], Dict[str, str]]:
     index: Dict[str, str] = {}
     ret: List[str] = []
-    for k, meta in options.items():
+    for meta in options:
         if meta.long:
             name = meta.long_name
             item = name
             if meta.value_required():
                 item += "="
             ret.append(item)
-            index["--" + name] = k
+            index["--" + name] = meta.name
     return ret, index
