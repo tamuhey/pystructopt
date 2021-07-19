@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Opts:
-    # basic optional argument
+    # basic optional argument (--opt)
     opt: str
 
     # short optional argument: -e
@@ -18,16 +18,14 @@ class Opts:
     # positional argument
     count: int = field(metadata={"positional": True})
 
-    # -vvv -> 3
-    verbose: int = field(
-        metadata={"short": True, "from_occurrences": True, "positional": False}
-    )
+    # from occurrences: -vvv -> 3
+    verbose: int = field(metadata={"short": True, "from_occurrences": True})
 
-    # multiple value
-    paths: List[Path] = field(metadata={"short": True})
+    # multiple values into list
+    paths: List[Path]
 
     # customize option name
-    foo: int = field(metadata={"short": True, "short_name": "x"})
+    foo: int = field(metadata={"short": "x"})
 
     # default value
     bar: str = "bar"
