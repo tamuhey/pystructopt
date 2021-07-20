@@ -5,8 +5,8 @@ from typing import List, Type, TypeVar
 
 import dataclass_utils  # type: ignore
 
-from ._parse import parse_args
 from ._dataclass_parser import get_options
+from ._parse import parse_args
 
 __all__ = ["parse"]
 
