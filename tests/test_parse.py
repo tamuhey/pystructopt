@@ -1,16 +1,16 @@
 import pytest
-from pystructopt._parse import FieldMeta
+from pystructopt._parse import Arg
 
 
 def test_fieldmeta():
-    x = FieldMeta.from_dict({"positional": True, "name": "foo", "type": int})
+    x = Arg.from_dict({"positional": True, "name": "foo", "type": int})
     assert x.positional
-    x = FieldMeta.from_dict({"long": "foo", "name": "bar", "type": str, "short": "x"})
+    x = Arg.from_dict({"long": "foo", "name": "bar", "type": str, "short": "x"})
     assert x.long_name == "foo"
     assert x.short_name == "x"
 
 
-@pytest.mark.parametrize("field", [FieldMeta("foo", int, long=False, positional=False)])
-def test_validate(field: FieldMeta):
+@pytest.mark.parametrize("field", [Arg("foo", int, long=False, positional=False)])
+def test_validate(field: Arg):
     with pytest.raises(ValueError):
         field.validate()

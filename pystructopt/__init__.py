@@ -14,6 +14,7 @@ T = TypeVar("T")
 
 
 def parse(datacls: Type[T]) -> T:
+    """Entry point - create dataclass instance from command line argument"""
     return _parse(datacls, sys.argv[1:])
 
 

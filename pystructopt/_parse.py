@@ -1,3 +1,4 @@
+"""Argument parser for List[Option]"""
 import getopt
 import logging
 from collections import defaultdict
@@ -12,17 +13,25 @@ from ._utils import from_str
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class FieldMeta:
+@dataclass(frozen=True)
+class Arg:
+    """Read-only dataclass for each command line option"""
+
     name: str
+    # value type of this option
     type: Type[Any]
+
+    # long option name or flag
     long: Union[bool, str] = True
+    # short option name or flag
     short: Union[bool, str] = False
+    # wheter to enable positional argument
     positional: bool = False
+    # parse based on occurrences (e.g. -vvv -> 3)
     from_occurrences: bool = False
 
     @classmethod
-    def from_dict(cls, meta: Mapping[str, Any]) -> "FieldMeta":
+    def from_dict(cls, meta: Mapping[str, Any]) -> "Arg":
         return dataclass_utils.into(meta, cls)
 
     @property
@@ -63,13 +72,13 @@ class FieldMeta:
         if self.from_occurrences:
             if self.positional:
                 err = "Cannot use `from_occurrences` with positional argument"
-
             if self.type is not int:
                 err = "The type of a field with `from_occurrences` must be `int`"
         if err:
             raise ValueError(f"Error in {self.name}: {err}")
 
     def value_from_strs(self, value: List[str]) -> Any:
+        """Create value from list of arguments."""
         if self.type is bool:
             if value != [""]:
                 raise ValueError(
@@ -84,6 +93,7 @@ class FieldMeta:
             else:
                 return int(self._expect_one(value))
         elif self.type is str:
+            # just take one value
             return self._expect_one(value)
         elif get_origin(self.type) is list:
             rets: List[Any] = []
@@ -101,6 +111,7 @@ class FieldMeta:
                 rets.append(w)
             return rets
         else:
+            # Any type can be constructed from str, e.g. `Path`
             v = self._expect_one(value)
             ret = from_str(self.type, v)
             if ret is None:
@@ -113,41 +124,46 @@ class FieldMeta:
         return value[0]
 
 
-def parse_args(args: List[str], options: List[FieldMeta]) -> Dict[str, Any]:
+def parse_args(args: List[str], options: List[Arg]) -> Dict[str, Any]:
+    """Parse arguments with `options` and returns { option_name: value } dict."""
     _validate_options(options)
     logger.info(f"options: {options}")
-    shortopts, index = _get_shortopt(options)
-    longopts, index2 = _get_longopt(options)
-    # merge index
-    index.update(index2)
-    logger.info(f"index: {index}")
 
-    logger.info(f"short: {shortopts}")
-    logger.info(f"long : {longopts}")
+    # get argument for `gnu_getopt`
+    shortopts, longopts, index = _get_opt_index(options)
+
+    # parse arguments
     opts_, pos_ = getopt.gnu_getopt(args, shortopts, longopts)
 
-    # convert to dict
-    opts: DefaultDict[str, List[str]] = defaultdict(list)
-    for k, v in opts_:
-        name = index[k]
-        opts[name].append(v)
-    pos = _consume_pos_args(pos_, options)
-    logger.info(f"opts: {opts}")
-    logger.info(f"pos: {pos}")
-
-    # merge
-    for k, v2 in pos.items():
-        opts[k].extend(v2)
-    ret: Dict[str, Any] = {}
+    # convert arguments to dict
+    opts = _parse_getopt_result(opts_, pos_, index, options)
 
     # convert to value
+    ret: Dict[str, Any] = {}
     tmp = {meta.name: meta for meta in options}
-    for k, v3 in opts.items():
-        ret[k] = tmp[k].value_from_strs(v3)
+    for k, v in opts.items():
+        ret[k] = tmp[k].value_from_strs(v)
     return ret
 
 
-def _validate_options(options: List[FieldMeta]):
+def _parse_getopt_result(
+    opts: List[Tuple[str, str]],
+    pos: List[str],
+    index: Dict[str, str],
+    options: List[Arg],
+) -> Dict[str, List[str]]:
+    ret: DefaultDict[str, List[str]] = defaultdict(list)
+    for k, v in opts:
+        name = index[k]
+        ret[name].append(v)
+    pos_ = _consume_pos_args(pos, options)
+    # merge pos into opts
+    for k, v2 in pos_.items():
+        ret[k].extend(v2)
+    return ret
+
+
+def _validate_options(options: List[Arg]):
     shorts: Set[str] = set()
     longs: Set[str] = set()
     for opt in options:
@@ -163,7 +179,7 @@ def _validate_options(options: List[FieldMeta]):
             seen.add(name)
 
 
-def _consume_pos_args(pos: List[str], options: List[FieldMeta]) -> Dict[str, List[str]]:
+def _consume_pos_args(pos: List[str], options: List[Arg]) -> Dict[str, List[str]]:
     ret: DefaultDict[str, List[str]] = defaultdict(list)
     last = None
     for meta in options:
@@ -182,7 +198,15 @@ def _consume_pos_args(pos: List[str], options: List[FieldMeta]) -> Dict[str, Lis
     return ret
 
 
-def _get_shortopt(options: List[FieldMeta]) -> Tuple[str, Dict[str, str]]:
+def _get_opt_index(options: List[Arg]) -> Tuple[str, List[str], Dict[str, str]]:
+    shortopts, index = _get_shortopt(options)
+    longopts, index2 = _get_longopt(options)
+    # merge index
+    index.update(index2)
+    return shortopts, longopts, index
+
+
+def _get_shortopt(options: List[Arg]) -> Tuple[str, Dict[str, str]]:
     """Returns (opt, index). Index contains `shortopt: original name`"""
     index: Dict[str, str] = {}
     ret = ""
@@ -196,7 +220,7 @@ def _get_shortopt(options: List[FieldMeta]) -> Tuple[str, Dict[str, str]]:
     return ret, index
 
 
-def _get_longopt(options: List[FieldMeta]) -> Tuple[List[str], Dict[str, str]]:
+def _get_longopt(options: List[Arg]) -> Tuple[List[str], Dict[str, str]]:
     index: Dict[str, str] = {}
     ret: List[str] = []
     for meta in options:
