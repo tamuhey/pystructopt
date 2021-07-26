@@ -3,7 +3,18 @@ import getopt
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, DefaultDict, Dict, List, Mapping, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    DefaultDict,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 import dataclass_utils  # type: ignore
 from typing_extensions import get_args, get_origin
@@ -29,6 +40,8 @@ class Arg:
     positional: bool = False
     # parse based on occurrences (e.g. -vvv -> 3)
     from_occurrences: bool = False
+    # help string
+    help: Optional[str] = None
 
     @classmethod
     def from_dict(cls, meta: Mapping[str, Any]) -> "Arg":
