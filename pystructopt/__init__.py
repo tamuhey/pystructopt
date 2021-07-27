@@ -102,12 +102,13 @@ def _get_name_or_flags(field: FieldMeta) -> List[str]:
         ret.append("--" + field.dest)
 
     # positional
-    if isinstance(field.positional, str):
-        if not field.long:
-            raise ValueError(f"Positional name must not be empty. ({field.dest})")
-        ret.append(field.positional)
-    if field.positional == True:
-        ret.append(field.dest)
+    if not ret:
+        if isinstance(field.positional, str):
+            if not field.long:
+                raise ValueError(f"Positional name must not be empty. ({field.dest})")
+            ret.append(field.positional)
+        if field.positional == True:
+            ret.append(field.dest)
 
     if not ret:
         raise ValueError("One of Positional or Optional fields must be specified.")
