@@ -5,7 +5,7 @@ from typing import List, Union
 
 from typing_extensions import Literal
 
-from pystructopt import _parse, get_options
+from pystructopt import parse_args, _get_name_or_flags, FieldMeta
 
 
 @dataclass
@@ -19,9 +19,29 @@ class Opt0:
     g_g: int = 0
     verbose: int = field(
         default=0,
-        metadata={"from_occurrences": True, "short": True},
+        metadata={"nargs": "*", "short": True},
     )
     verylonglongname: int = field(default=0, metadata={"long": "alternative"})
+
+
+def test_get_name_or_flags():
+    metas = {
+        v.name: FieldMeta.from_dataclass_field(v) for v in dataclasses.fields(Opt0)
+    }
+    ret = {k: _get_name_or_flags(v) for k, v in metas.items()}
+    assert ret["d"] == ["--d"]
+    assert ret["b"] == ["--b", "b"]
+
+
+@dataclass
+class Opt10:
+    a: int
+
+
+def test_parse10():
+    args = ["--a", "1"]
+    opt = parse_args(Opt10, args)
+    assert opt.a == 1
 
 
 def test_parse0():
@@ -29,17 +49,10 @@ def test_parse0():
     # fmt: off
     args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1", "-vv", "--alternative", "10"]
     # fmt: on
-    opt = _parse(Opt0, args)
+    opt = parse_args(Opt0, args)
     assert opt == Opt0(
         100, "2", "foo", True, ["1", "3"], [1, 10], 1, verbose=2, verylonglongname=10
     )
-
-
-def test_get_options():
-    fields = get_options(Opt0)
-    meta = fields[0]
-    assert meta.positional
-    assert meta.name == "a"
 
 
 @dataclass
@@ -54,7 +67,7 @@ def test_parse1():
     # fmt: off
     args = ["1", "2", "3", "--dd", "1", "--dd", "2", "--dd", "a"]
     # fmt: on
-    opt = _parse(Opt1, args)
+    opt = parse_args(Opt1, args)
     assert opt == Opt1(1, 2, 3, [1, 2, "a"])
 
 
@@ -67,5 +80,5 @@ if sys.version_info >= (3, 9, 0):
 
     def test_parse_py39():
         args = ["--aa", "1", "--bb", "3", "--aa", "2"]
-        opt = _parse(Opt100, args)
+        opt = parse_args(Opt100, args)
         assert opt == Opt100([1, 2], ["3"])

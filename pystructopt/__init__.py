@@ -5,6 +5,8 @@ import sys
 from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 from dataclasses import dataclass
 from typing_extensions import TypeAlias
+import logging
+
 
 import dataclass_utils  # type: ignore
 
@@ -47,7 +49,7 @@ class FieldMeta:
     short: Union[bool, str] = False
     positional: Union[bool, str] = False
     action: Action = "store"
-    nargs: Union[int, Literal["?", "*", "+"]] = 0
+    nargs: Optional[Union[int, Literal["?", "*", "+"]]] = None
     const: Optional[Any] = None
     type: Type[Any] = str
     default: Optional[Any] = None
@@ -55,16 +57,21 @@ class FieldMeta:
     required: bool = False
     help: Optional[str] = None
 
+    @classmethod
+    def from_dataclass_field(cls, field: dataclasses.Field[Any]) -> "FieldMeta":
+        d = {"dest": field.name, "type": field.type, **field.metadata}
+        meta = dataclass_utils.into(d, FieldMeta)
+        return meta
+
 
 def _parse_core(datacls: Type[T], args: List[str]) -> T:
     parser = argparse.ArgumentParser()  # TODO: description
     for field in dataclasses.fields(datacls):
-        d = {"dest": field.name, **field.metadata}
-        meta = dataclass_utils.into(d, FieldMeta)
+        meta = FieldMeta.from_dataclass_field(field)
         name_or_flags = _get_name_or_flags(meta)
         kwargs = dataclasses.asdict(meta)
-        del kwargs["short"]
-        del kwargs["long"]
+        for k in ["short", "long", "positional"]:
+            del kwargs[k]
         parser.add_argument(*name_or_flags, **kwargs)
     ns = parser.parse_args(args)
     data: Dict[str, Any] = {}
