@@ -30,7 +30,7 @@ def test_get_name_or_flags():
     }
     ret = {k: _get_name_or_flags(v) for k, v in metas.items()}
     assert ret["d"] == ["--d"]
-    assert ret["b"] == ["--b", "b"]
+    assert ret["b"] == ["b"]
 
 
 @dataclass

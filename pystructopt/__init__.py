@@ -2,7 +2,7 @@ import dataclasses
 import argparse
 import inspect
 import sys
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypeVar, Union
 from dataclasses import dataclass
 from typing_extensions import TypeAlias
 import logging
@@ -68,11 +68,8 @@ def _parse_core(datacls: Type[T], args: List[str]) -> T:
     parser = argparse.ArgumentParser()  # TODO: description
     for field in dataclasses.fields(datacls):
         meta = FieldMeta.from_dataclass_field(field)
-        name_or_flags = _get_name_or_flags(meta)
-        kwargs = dataclasses.asdict(meta)
-        for k in ["short", "long", "positional"]:
-            del kwargs[k]
-        parser.add_argument(*name_or_flags, **kwargs)
+        args, kwargs = _build_param(meta)
+        parser.add_argument(*args, **kwargs)
     ns = parser.parse_args(args)
     data: Dict[str, Any] = {}
     for field in dataclasses.fields(datacls):
@@ -80,36 +77,54 @@ def _parse_core(datacls: Type[T], args: List[str]) -> T:
     return dataclass_utils.into(data, datacls)
 
 
+def _build_param(meta: FieldMeta) -> Tuple[List[str], Dict[str, Any]]:
+    name_or_flags = _get_name_or_flags(meta)
+    kwargs = dataclasses.asdict(meta)
+    for k in ["short", "long", "positional"]:
+        del kwargs[k]
+    if meta.positional:
+        for k in ["required", "dest"]:
+            del kwargs[k]
+    return name_or_flags, kwargs
+
+
 def _get_name_or_flags(field: FieldMeta) -> List[str]:
     ret: List[str] = []
 
-    # short
-    if isinstance(field.short, str):
-        if len(field.short) != 1:
-            raise ValueError(
-                f"Length of the short option name must be 1. ({field.short} in {field.dest})"
-            )
-        ret.append("-" + field.short)
-    if field.short == True:
-        ret.append("-" + field.dest[0])
-
-    # long
-    if isinstance(field.long, str):
-        if not field.long:
-            raise ValueError(f"Long option name must not be empty. ({field.dest})")
-        ret.append("--" + field.long)
-    if field.long == True:
-        ret.append("--" + field.dest)
-
     # positional
-    if not ret:
+    if field.positional:
         if isinstance(field.positional, str):
             if not field.long:
                 raise ValueError(f"Positional name must not be empty. ({field.dest})")
             ret.append(field.positional)
-        if field.positional == True:
+        else:
             ret.append(field.dest)
+    else:
+        # short
+        if isinstance(field.short, str):
+            if len(field.short) != 1:
+                raise ValueError(
+                    f"Length of the short option name must be 1. ({field.short} in {field.dest})"
+                )
+            ret.append("-" + field.short)
+        if field.short == True:
+            ret.append("-" + field.dest[0])
+
+        # long
+        v = None
+        if isinstance(field.long, str):
+            if not field.long:
+                raise ValueError(f"Long option name must not be empty. ({field.dest})")
+            v = field.long
+        elif field.long == True:
+            v = field.dest
+        if v is not None:
+            ret.append("--" + _norm_flag(v))
 
     if not ret:
         raise ValueError("One of Positional or Optional fields must be specified.")
     return ret
+
+
+def _norm_flag(name: str) -> str:
+    return name.replace("_", "-")
