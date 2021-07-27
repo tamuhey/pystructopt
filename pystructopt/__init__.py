@@ -54,7 +54,7 @@ class FieldMeta:
     type: Type[Any] = str
     default: Optional[Any] = None
     choices: Optional[List[str]] = None
-    required: bool = False
+    required: Optional[bool] = None
     help: Optional[str] = None
 
     @classmethod
@@ -64,13 +64,18 @@ class FieldMeta:
         return meta
 
 
+class _Dummy:
+    ...
+
+
 def _parse_core(datacls: Type[T], args: List[str]) -> T:
-    parser = argparse.ArgumentParser()  # TODO: description
+    parser = argparse.ArgumentParser(prog=args[0])  # TODO: description
     for field in dataclasses.fields(datacls):
         meta = FieldMeta.from_dataclass_field(field)
         args, kwargs = _build_param(meta)
         parser.add_argument(*args, **kwargs)
-    ns = parser.parse_args(args)
+    ns = _Dummy()
+    parser.parse_args(args[1:], ns)
     data: Dict[str, Any] = {}
     for field in dataclasses.fields(datacls):
         data[field.name] = getattr(ns, field.name)
@@ -82,6 +87,9 @@ def _build_param(meta: FieldMeta) -> Tuple[List[str], Dict[str, Any]]:
     kwargs = dataclasses.asdict(meta)
     for k in ["short", "long", "positional"]:
         del kwargs[k]
+    for k in ["nargs", "const", "default", "choices", "required", "help"]:
+        if kwargs[k] is None:
+            del kwargs[k]
     if meta.positional:
         for k in ["required", "dest"]:
             del kwargs[k]

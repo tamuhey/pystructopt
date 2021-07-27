@@ -39,7 +39,7 @@ class Opt10:
 
 
 def test_parse10():
-    args = ["--a", "1"]
+    args = ["foo", "--a", "1"]
     opt = parse_args(Opt10, args)
     assert opt.a == 1
 
@@ -47,7 +47,7 @@ def test_parse10():
 def test_parse0():
     assert dataclasses.is_dataclass(Opt0)
     # fmt: off
-    args = [ "--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1", "-vv", "--alternative", "10"]
+    args = [ "dummy","--a", "100", "--b", "2", "--d", "-e", "1", "-f", "1", "--ee", "3", "--ff", "10", "--g-g", "1", "-vv", "--alternative", "10"]
     # fmt: on
     opt = parse_args(Opt0, args)
     assert opt == Opt0(
