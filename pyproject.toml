@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pystructopt"
-version = "0.1.6"
+version = "0.1.7"
 description = ""
 authors = [ "Yohei Tamura <tamuhey@gmail.com>",]
 
@@ -16,7 +16,7 @@ files = [ "pystructopt/VERSION.py",]
 [tool.poetry.dependencies]
 dataclass-utils = ">=0.7.14,<1"
 python = "^3.7"
-typing-extensions = "^3.10.0"
+typing-extensions = ">=3.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
